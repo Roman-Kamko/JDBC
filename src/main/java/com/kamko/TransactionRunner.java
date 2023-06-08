@@ -1,8 +1,9 @@
-package com.kamko.util;
+package com.kamko;
+
+import com.kamko.util.ConnectionManager;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class TransactionRunner {
