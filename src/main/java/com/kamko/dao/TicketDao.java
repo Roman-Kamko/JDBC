@@ -4,23 +4,125 @@ import com.kamko.entity.Ticket;
 import com.kamko.exceptions.DaoException;
 import com.kamko.util.ConnectionManager;
 
-import java.math.BigDecimal;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class TicketDao {
+    // singleton
     private static final TicketDao INSTANCE = new TicketDao();
+    private static final String GET_ALL = """
+            SELECT id,
+                   passenger_no,
+                   passenger_name,
+                   flight_id,
+                   seat_no,
+                   coast
+            FROM ticket
+            """;
+    private static final String FIND_BY_ID_SQL = """
+            SELECT id,
+                passenger_no,
+                passenger_name,
+                flight_id,
+                seat_no,
+                coast
+            FROM ticket
+            WHERE id = ?;
+            """;
     private static final String DELETE_SQL = """
             DELETE 
             FROM ticket
             WHERE id = ?
             """;
     private static final String SAVE_SQL = """
-            INSERT INTO ticket (passenger_no, passenger_name, flight_id, seat_no, coast)
+            INSERT INTO ticket (passenger_no, 
+                                passenger_name, 
+                                flight_id, 
+                                seat_no, 
+                                coast)
             VALUES (?, ?, ?, ?, ?)
+            """;
+    private static final String UPDATE_SQL = """
+            UPDATE ticket
+            SET passenger_no = ?,
+                passenger_name = ?,
+                flight_id = ?,
+                seat_no = ?,
+                coast = ?
+            WHERE id = ?;
             """;
 
     private TicketDao() {
     }
+
+    public List<Ticket> getAll() {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(GET_ALL)) {
+            ResultSet resultSet = preparedStatement.executeQuery();
+            List<Ticket> result = new ArrayList<>();
+            while (resultSet.next()) {
+                result.add(new Ticket(
+                        resultSet.getInt("id"),
+                        resultSet.getString("passenger_no"),
+                        resultSet.getString("passenger_name"),
+                        resultSet.getInt("flight_id"),
+                        resultSet.getString("seat_no"),
+                        resultSet.getBigDecimal("coast")
+                ));
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        }
+    }
+
+    public Optional<Ticket> findById(Integer id) {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(FIND_BY_ID_SQL)) {
+
+            preparedStatement.setInt(1, id);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            Ticket ticket = null;
+
+            if (resultSet.next()) {
+                ticket = new Ticket(
+                        resultSet.getInt("id"),
+                        resultSet.getString("passenger_no"),
+                        resultSet.getString("passenger_name"),
+                        resultSet.getInt("flight_id"),
+                        resultSet.getString("seat_no"),
+                        resultSet.getBigDecimal("coast")
+                );
+            }
+
+            return Optional.ofNullable(ticket);
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        }
+    }
+
+    public void update(Ticket ticket) {
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(UPDATE_SQL)) {
+
+            preparedStatement.setString(1, ticket.getPassengerNo());
+            preparedStatement.setString(2, ticket.getPassengerName());
+            preparedStatement.setInt(3, ticket.getFlightId());
+            preparedStatement.setString(4, ticket.getSeatNo());
+            preparedStatement.setBigDecimal(5, ticket.getCoast());
+            preparedStatement.setInt(6, ticket.getId());
+
+            preparedStatement.executeUpdate();
+
+
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        }
+    }
+
 
     public boolean delete(Integer id) {
         try (Connection connection = ConnectionManager.getConnection();

@@ -11,15 +11,15 @@ import java.util.Set;
 
 public class JdbcStarter {
     public static void main(String[] args) throws SQLException {
-//        Integer flightId = 1;
-//        List<Integer> ticketsByFlightId = getTicketsByFlightId(flightId);
-//        System.out.println(ticketsByFlightId);
-//
-//        List<Integer> flightBetween = getFlightsBetween(
-//                LocalDateTime.of(2020, 10, 1, 0, 0),
-//                LocalDateTime.now()
-//                );
-//        System.out.println(flightBetween);
+        Integer flightId = 1;
+        List<Integer> ticketsByFlightId = getTicketsByFlightId(flightId);
+        System.out.println(ticketsByFlightId);
+
+        List<Integer> flightBetween = getFlightsBetween(
+                LocalDateTime.of(2020, 10, 1, 0, 0),
+                LocalDateTime.now()
+                );
+        System.out.println(flightBetween);
 
         try {
             getMetaInfo();

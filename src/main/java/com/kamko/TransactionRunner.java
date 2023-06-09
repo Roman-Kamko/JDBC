@@ -30,7 +30,9 @@ public class TransactionRunner {
             deleteTicketStatement.executeUpdate();
 
             if (true) {
-                throw new RuntimeException("Ooops");
+                throw new RuntimeException("Ooops"); // имитация эксепшена, с автокомитом получили бы две транзакции
+                                                     // причем транзакция с удалением билетов исполнилась бы, что херова,
+                                                     // все или ничего
             }
 
             deleteFlightStatement.executeUpdate();

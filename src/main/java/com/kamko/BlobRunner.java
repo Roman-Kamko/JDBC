@@ -1,4 +1,6 @@
-package com.kamko.util;
+package com.kamko;
+
+import com.kamko.util.ConnectionManager;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
