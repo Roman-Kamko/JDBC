@@ -19,6 +19,9 @@ public class Ticket {
         this.coast = coast;
     }
 
+    public Ticket() {
+    }
+
     public int getId() {
         return id;
     }
