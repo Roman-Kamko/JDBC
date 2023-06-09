@@ -16,7 +16,7 @@ public class BlobRunner {
                 SET image = ?
                 WHERE id = 1;
                 """;
-        try (Connection connection = ConnectionManager.open();
+        try (Connection connection = ConnectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             connection.setAutoCommit(false);
@@ -38,7 +38,7 @@ public class BlobRunner {
                 FROM aircraft
                 WHERE id = ?;
                 """;
-        try (Connection connection = ConnectionManager.open();
+        try (Connection connection = ConnectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             preparedStatement.setInt(1, 1);

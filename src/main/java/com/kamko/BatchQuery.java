@@ -17,7 +17,7 @@ public class BatchQuery {
         Statement statement = null;
 
         try {
-            connection = ConnectionManager.open();
+            connection = ConnectionManager.getConnection();
             statement = connection.createStatement();
 
             connection.setAutoCommit(false); // берем управление транзакциями на себя

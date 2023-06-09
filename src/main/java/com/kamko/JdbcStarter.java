@@ -21,11 +21,15 @@ public class JdbcStarter {
 //                );
 //        System.out.println(flightBetween);
 
-        getMetaInfo();
+        try {
+            getMetaInfo();
+        } finally {
+            ConnectionManager.closeConnection();
+        }
     }
 
     private static void getMetaInfo() throws SQLException {
-        try (Connection connection = ConnectionManager.open()){
+        try (Connection connection = ConnectionManager.getConnection()){
              DatabaseMetaData metaData = connection.getMetaData();
              ResultSet resultSet = metaData.getCatalogs();
              while (resultSet.next()) {
@@ -45,7 +49,7 @@ public class JdbcStarter {
 
         List<Integer> result = new ArrayList<>();
 
-        try (Connection connection = ConnectionManager.open();
+        try (Connection connection = ConnectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             preparedStatement.setTimestamp(1, Timestamp.valueOf(start));
@@ -70,7 +74,7 @@ public class JdbcStarter {
 
         List<Integer> result = new ArrayList<>();
 
-        try (Connection connection = ConnectionManager.open();
+        try (Connection connection = ConnectionManager.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
 
             preparedStatement.setInt(1, flightId);
