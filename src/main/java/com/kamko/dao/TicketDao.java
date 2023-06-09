@@ -21,14 +21,7 @@ public class TicketDao {
                    coast
             FROM ticket
             """;
-    private static final String FIND_BY_ID_SQL = """
-            SELECT id,
-                passenger_no,
-                passenger_name,
-                flight_id,
-                seat_no,
-                coast
-            FROM ticket
+    private static final String FIND_BY_ID_SQL = GET_ALL + """
             WHERE id = ?;
             """;
     private static final String DELETE_SQL = """
