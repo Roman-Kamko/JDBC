@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+//CRUD operation with JDBC
 public class TicketDao {
     // singleton
     private static final TicketDao INSTANCE = new TicketDao();
@@ -56,14 +57,7 @@ public class TicketDao {
             ResultSet resultSet = preparedStatement.executeQuery();
             List<Ticket> result = new ArrayList<>();
             while (resultSet.next()) {
-                result.add(new Ticket(
-                        resultSet.getInt("id"),
-                        resultSet.getString("passenger_no"),
-                        resultSet.getString("passenger_name"),
-                        resultSet.getInt("flight_id"),
-                        resultSet.getString("seat_no"),
-                        resultSet.getBigDecimal("coast")
-                ));
+                result.add(getTicket(resultSet));
             }
             return result;
         } catch (SQLException e) {
@@ -81,14 +75,7 @@ public class TicketDao {
             Ticket ticket = null;
 
             if (resultSet.next()) {
-                ticket = new Ticket(
-                        resultSet.getInt("id"),
-                        resultSet.getString("passenger_no"),
-                        resultSet.getString("passenger_name"),
-                        resultSet.getInt("flight_id"),
-                        resultSet.getString("seat_no"),
-                        resultSet.getBigDecimal("coast")
-                );
+                ticket = getTicket(resultSet);
             }
 
             return Optional.ofNullable(ticket);
@@ -149,6 +136,17 @@ public class TicketDao {
         } catch (SQLException e) {
             throw new DaoException(e);
         }
+    }
+
+    private Ticket getTicket(ResultSet resultSet) throws SQLException {
+        return new Ticket(
+                resultSet.getInt("id"),
+                resultSet.getString("passenger_no"),
+                resultSet.getString("passenger_name"),
+                resultSet.getInt("flight_id"),
+                resultSet.getString("seat_no"),
+                resultSet.getBigDecimal("coast")
+        );
     }
 
     public static TicketDao getInstance() {
