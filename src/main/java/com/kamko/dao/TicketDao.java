@@ -1,5 +1,7 @@
 package com.kamko.dao;
 
+import com.kamko.dto.TicketFilter;
+import com.kamko.entity.Flight;
 import com.kamko.entity.Ticket;
 import com.kamko.exceptions.DaoException;
 import com.kamko.util.ConnectionManager;
@@ -9,21 +11,33 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static java.util.stream.Collectors.*;
+
 //CRUD operation with JDBC
-public class TicketDao {
+public class TicketDao implements Dao<Integer, Ticket> {
     // singleton
     private static final TicketDao INSTANCE = new TicketDao();
+    private final FlightDao flightDao = FlightDao.getInstance();
     private static final String GET_ALL = """
-            SELECT id,
+            SELECT ticket.id,
                    passenger_no,
                    passenger_name,
                    flight_id,
                    seat_no,
-                   coast
+                   coast,
+                   f.status,
+                   f.flight_no,
+                   f.aircraft_id,
+                   f.arrival_airport_code,
+                   f.arrival_date,
+                   f.departure_airport_code,
+                   f.departure_date
             FROM ticket
+            JOIN flight f
+                ON ticket.flight_id = f.id
             """;
     private static final String FIND_BY_ID_SQL = GET_ALL + """
-            WHERE id = ?;
+            WHERE ticket.id = ?;
             """;
     private static final String DELETE_SQL = """
             DELETE 
@@ -49,6 +63,38 @@ public class TicketDao {
             """;
 
     private TicketDao() {
+    }
+
+    public List<Ticket> getAll(TicketFilter ticketFilter) {
+        List<Object> parameters = new ArrayList<>();
+        List<String> whereSql = new ArrayList<>();
+        if (ticketFilter.seatNo() != null) {
+            whereSql.add("seat_no LIKE ?");
+            parameters.add("%" + ticketFilter.seatNo() + "%");
+        }
+        if (ticketFilter.passengerName() != null) {
+            whereSql.add("passenger_name = ?");
+            parameters.add(ticketFilter.passengerName());
+        }
+        parameters.add(ticketFilter.limit());
+        parameters.add(ticketFilter.offset());
+        String where = whereSql.stream()
+                .collect(joining(" AND ", " WHERE ", " LIMIT ? OFFSET ? "));
+        String sql = GET_ALL + where;
+        try (Connection connection = ConnectionManager.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            for (int i = 0; i < parameters.size(); i++) {
+                preparedStatement.setObject(i + 1, parameters.get(i));
+            }
+            ResultSet resultSet = preparedStatement.executeQuery();
+            List<Ticket> result = new ArrayList<>();
+            while (resultSet.next()) {
+                result.add(getTicket(resultSet));
+            }
+            return result;
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        }
     }
 
     public List<Ticket> getAll() {
@@ -90,7 +136,7 @@ public class TicketDao {
 
             preparedStatement.setString(1, ticket.getPassengerNo());
             preparedStatement.setString(2, ticket.getPassengerName());
-            preparedStatement.setInt(3, ticket.getFlightId());
+            preparedStatement.setInt(3, ticket.getFlight().id());
             preparedStatement.setString(4, ticket.getSeatNo());
             preparedStatement.setBigDecimal(5, ticket.getCoast());
             preparedStatement.setInt(6, ticket.getId());
@@ -120,7 +166,7 @@ public class TicketDao {
 
             preparedStatement.setString(1, ticket.getPassengerNo());
             preparedStatement.setString(2, ticket.getPassengerName());
-            preparedStatement.setInt(3, ticket.getFlightId());
+            preparedStatement.setInt(3, ticket.getFlight().id());
             preparedStatement.setString(4, ticket.getSeatNo());
             preparedStatement.setBigDecimal(5, ticket.getCoast());
 
@@ -143,7 +189,8 @@ public class TicketDao {
                 resultSet.getInt("id"),
                 resultSet.getString("passenger_no"),
                 resultSet.getString("passenger_name"),
-                resultSet.getInt("flight_id"),
+                flightDao.findById(resultSet.getInt("flight_id"),
+                        resultSet.getStatement().getConnection()).orElse(null),
                 resultSet.getString("seat_no"),
                 resultSet.getBigDecimal("coast")
         );
